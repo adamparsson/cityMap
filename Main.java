@@ -70,7 +70,7 @@ public class Main extends Application {
 	private void placeRoad() {
 		int startX = (int)roadNodes.get(roadNodes.size()-1).getTranslateX();
 		int startY = (int)roadNodes.get(roadNodes.size()-1).getTranslateY();
-		Node road = createRectangle(startX, startY, 10, startY+180, Color.LIGHTGRAY);	
+		Node road = createRectangle(startX, startY, 10, startY+180, Color.WHITE);	
 		roads.add(road);
 	}
 
@@ -100,10 +100,11 @@ public class Main extends Application {
 		rectangle.setTranslateX(x);
 		rectangle.setTranslateY(y);
 		rectangle.setFill(color);
-		rectangle.setStroke(Color.GRAY);
+		rectangle.setStroke(Color.LIGHTGRAY);
 		rectangle.setStrokeWidth(2);
 		rectangle.setStrokeType(StrokeType.OUTSIDE);
 		rectangle.getProperties().put("exists", true);
+		rectangle.getTransforms().add(new Rotate(x));
 		gameRoot.getChildren().add(rectangle);
 		return rectangle;
 	}
