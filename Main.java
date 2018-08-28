@@ -1,5 +1,7 @@
+import java.lang.Math;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Node;
@@ -8,8 +10,10 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.StrokeType;
+import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 //player.getTransforms().add(new Rotate(30));
@@ -22,6 +26,7 @@ public class Main extends Application {
 	private Pane appRoot = new Pane();
 	private Pane gameRoot = new Pane();
 	private Node player;
+	private Random random = new Random();
 	private boolean running = true;
 
 	//methods
@@ -32,7 +37,9 @@ public class Main extends Application {
 		if (isPressed(KeyCode.D)) {movePlayerX(2);};
 		
 		if (isPressed(KeyCode.N)) {placeRoadNode();};
-		if (isPressed(KeyCode.M)) {placeRoad();};
+		if (isPressed(KeyCode.L)) {placeRoad();};
+
+		if (isPressed(KeyCode.H)) {placeBuilding();};
 	}
 
 	private void movePlayerX(int delta) {
@@ -44,9 +51,11 @@ public class Main extends Application {
 	}
 
 	private void placeBuilding() {
-		int x = (int)player.getTranslateX();
-		int y = (int)player.getTranslateY();
-		Node building = createRectangle(x, y, 20, 20, Color.LIGHTGRAY);
+		int x = (int)roadNodes.get(roadNodes.size()-1).getTranslateX();
+		int y = (int)roadNodes.get(roadNodes.size()-1).getTranslateY();
+		System.out.println(x);
+		int rot = randomIntInRange(0,359);
+		Node building = createRectangle(x, y, 20, 20, Color.GRAY, rot);
 		buildings.add(building);
 	}
 
@@ -68,9 +77,26 @@ public class Main extends Application {
 	}
 
 	private void placeRoad() {
-		int startX = (int)roadNodes.get(roadNodes.size()-1).getTranslateX();
-		int startY = (int)roadNodes.get(roadNodes.size()-1).getTranslateY();
-		Node road = createRectangle(startX, startY, 10, startY+180, Color.WHITE);	
+		double x = roadNodes.get(roadNodes.size()-1).getTranslateX();
+		double y = roadNodes.get(roadNodes.size()-1).getTranslateY();
+		double x2 = roadNodes.get(roadNodes.size()-2).getTranslateX();
+		double y2 = roadNodes.get(roadNodes.size()-2).getTranslateY();
+		
+		double width = Math.abs(x2-x);
+		double height = Math.abs(y2-y);
+		double h = Math.hypot(width, height);
+		//double angle = Math.toDegrees(Math.asin(height/h)); 
+		double angle = 0;
+
+		double w = 10.0;
+
+		Rectangle road = new Rectangle(x2, y2, w, h);
+		road.setFill(Color.WHITE);
+		road.setStroke(Color.LIGHTGRAY);
+		road.setStrokeWidth(2);
+		road.getTransforms().add(new Rotate(-45));
+
+		gameRoot.getChildren().add(road);
 		roads.add(road);
 	}
 
@@ -95,18 +121,32 @@ public class Main extends Application {
 		return circle;
 	}
 
-	private Node createRectangle(int x, int y, int w, int h, Color color) {
+	private Node createRectangle(int x, int y, int w, int h, Color color, int rot) {
 		Rectangle rectangle = new Rectangle(w, h);
 		rectangle.setTranslateX(x);
 		rectangle.setTranslateY(y);
 		rectangle.setFill(color);
-		rectangle.setStroke(Color.LIGHTGRAY);
-		rectangle.setStrokeWidth(2);
-		rectangle.setStrokeType(StrokeType.OUTSIDE);
 		rectangle.getProperties().put("exists", true);
-		rectangle.getTransforms().add(new Rotate(x));
+		rectangle.getTransforms().add(new Rotate(rot));
 		gameRoot.getChildren().add(rectangle);
 		return rectangle;
+	}
+
+	private Node createLine(int startX, int startY, int endX, int endY) {
+		Line line = new Line(startX, startY, endX, endY);
+		line.setStroke(Color.WHITE);
+		line.setStrokeWidth(9);
+		line.setStrokeType(StrokeType.OUTSIDE);
+		line.setStrokeLineCap(StrokeLineCap.ROUND);
+		line.getProperties().put("exists", true);
+		gameRoot.getChildren().add(line);
+		return line;
+	}
+
+	private int randomIntInRange(int min, int max) {
+		int n = max - min + 1;
+		int i = random.nextInt() % n;
+		return min + i;
 	}
 
 	@Override
