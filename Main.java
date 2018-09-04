@@ -20,9 +20,11 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 	private	HashMap<KeyCode, Boolean> keys = new HashMap<KeyCode, Boolean>();
-	private ArrayList<Node> buildings = new ArrayList<Node>();
 	private ArrayList<Node> roadNodes = new ArrayList<Node>();
 	private ArrayList<Node> roads = new ArrayList<Node>();
+	private ArrayList<Node> adresses = new ArrayList<Node>();
+	private ArrayList<Node> estates = new ArrayList<Node>();
+	private ArrayList<Node> buildings = new ArrayList<Node>();
 	private Pane appRoot = new Pane();
 	private Pane gameRoot = new Pane();
 	private Node player;
@@ -77,27 +79,58 @@ public class Main extends Application {
 	}
 
 	private void placeRoad() {
-		double x = roadNodes.get(roadNodes.size()-1).getTranslateX();
-		double y = roadNodes.get(roadNodes.size()-1).getTranslateY();
-		double x2 = roadNodes.get(roadNodes.size()-2).getTranslateX();
-		double y2 = roadNodes.get(roadNodes.size()-2).getTranslateY();
-		
-		double width = Math.abs(x2-x);
-		double height = Math.abs(y2-y);
-		double h = Math.hypot(width, height);
-		//double angle = Math.toDegrees(Math.asin(height/h)); 
-		double angle = 0;
+		//declare position and size of new road
+		int x = (int)player.getTranslateX();
+		int y = (int)player.getTranslateY();
+		int width = 500;
+		int height = 20;
 
-		double w = 10.0;
+		//instansiate a new road and set colors + stroke
+		Rectangle newRoad = new Rectangle(x, y, width, height);
+		newRoad.setFill(Color.WHITE);
+		newRoad.setStroke(Color.LIGHTGRAY);
+		newRoad.setStrokeWidth(2);
 
-		Rectangle road = new Rectangle(x2, y2, w, h);
-		road.setFill(Color.WHITE);
-		road.setStroke(Color.LIGHTGRAY);
-		road.setStrokeWidth(2);
-		road.getTransforms().add(new Rotate(-45));
+		//check if new road overlaps another road
+		boolean collision = false;
+		for (Node otherRoad : roads) {
+			if (newRoad.getBoundsInParent().intersects(otherRoad.getBoundsInParent())) {
+				collision = true;	
+				break;
+			}
+		}
 
-		gameRoot.getChildren().add(road);
-		roads.add(road);
+		//add road to gameRoot and roads ArrayList
+		if (collision == false) {
+			gameRoot.getChildren().add(newRoad);
+			roads.add(newRoad);
+
+			//add adresses to the new road on left side
+			for (int i = x; i < x+width; i+=50) {
+				Rectangle newAdress = createAdress(i, y);
+				gameRoot.getChildren().add(newAdress);
+			};
+			//add adresses to the new road on right side
+			for (int i = x; i < x+width; i+=50) {
+				Rectangle newAdress = createAdress(i, y+20);
+				gameRoot.getChildren().add(newAdress);
+			};
+
+		}
+	}
+
+	private Rectangle createAdress(int x, int y) {
+		//declare constant size of new adress
+		int width = 2;
+		int height = 2;
+
+		//instansiate a new adress and set color
+		Rectangle newAdress = new Rectangle(x, y-1, width, height);
+		newAdress.setFill(Color.ORANGE);
+
+		//add to adresses ArrayList and return new adress
+		adresses.add(newAdress);
+		return newAdress;
 	}
 
 	private boolean isPressed(KeyCode key) {
