@@ -1,7 +1,7 @@
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Node;
@@ -28,7 +28,6 @@ public class Main extends Application {
 	private Pane appRoot = new Pane();
 	private Pane gameRoot = new Pane();
 	private Node player;
-	private Random random = new Random();
 	private boolean running = true;
 
 	//methods
@@ -38,10 +37,7 @@ public class Main extends Application {
 		if (isPressed(KeyCode.A)) {movePlayerX(-2);};
 		if (isPressed(KeyCode.D)) {movePlayerX(2);};
 		
-		if (isPressed(KeyCode.N)) {placeRoadNode();};
 		if (isPressed(KeyCode.L)) {placeRoad();};
-
-		if (isPressed(KeyCode.H)) {placeBuilding();};
 	}
 
 	private void movePlayerX(int delta) {
@@ -52,85 +48,78 @@ public class Main extends Application {
 		player.setTranslateY(player.getTranslateY() + delta);
 	}
 
-	private void placeBuilding() {
-		int x = (int)roadNodes.get(roadNodes.size()-1).getTranslateX();
-		int y = (int)roadNodes.get(roadNodes.size()-1).getTranslateY();
-		System.out.println(x);
-		int rot = randomIntInRange(0,359);
-		Node building = createRectangle(x, y, 20, 20, Color.GRAY, rot);
-		buildings.add(building);
-	}
-
-	private void placeRoadNode() {
-		boolean collision = false;
-		for (Node roadNode : roadNodes) {
-			if (player.getBoundsInParent().intersects(roadNode.getBoundsInParent())) {
-				collision = true;	
-				break;
-			}
-		}
-
-		if (collision == false) {
-			int x = (int)player.getTranslateX();
-			int y = (int)player.getTranslateY();
-			Node roadNode = createCircle(x, y, 10, Color.LIGHTGRAY);
-			roadNodes.add(roadNode);
-		}
-	}
-
 	private void placeRoad() {
-		//declare position and size of new road
 		int x = (int)player.getTranslateX();
 		int y = (int)player.getTranslateY();
-		int width = 500;
-		int height = 20;
 
-		//instansiate a new road and set colors + stroke
-		Rectangle newRoad = new Rectangle(x, y, width, height);
+		//instansiate a new road object
+		Rectangle newRoad = new Rectangle(x, y, 500, 20);
 		newRoad.setFill(Color.WHITE);
 		newRoad.setStroke(Color.LIGHTGRAY);
 		newRoad.setStrokeWidth(2);
-
-		//check if new road overlaps another road
-		boolean collision = false;
-		for (Node otherRoad : roads) {
-			if (newRoad.getBoundsInParent().intersects(otherRoad.getBoundsInParent())) {
-				collision = true;	
-				break;
-			}
-		}
-
-		//add road to gameRoot and roads ArrayList
-		if (collision == false) {
-			gameRoot.getChildren().add(newRoad);
-			roads.add(newRoad);
-
-			//add adresses to the new road on left side
-			for (int i = x; i < x+width; i+=50) {
-				Rectangle newAdress = createAdress(i, y);
-				gameRoot.getChildren().add(newAdress);
-			};
-			//add adresses to the new road on right side
-			for (int i = x; i < x+width; i+=50) {
-				Rectangle newAdress = createAdress(i, y+20);
-				gameRoot.getChildren().add(newAdress);
-			};
-
-		}
+		if (isCanBuildRoad(newRoad) == true) {reallyBuildRoad(newRoad);};
 	}
 
-	private Rectangle createAdress(int x, int y) {
-		//declare constant size of new adress
-		int width = 2;
-		int height = 2;
+	private void reallyBuildRoad(Rectangle newRoad) {
+		gameRoot.getChildren().add(newRoad);
+		roads.add(newRoad);
+		placeAdressesOnNewRoad(newRoad);
+	}
 
-		//instansiate a new adress and set color
-		Rectangle newAdress = new Rectangle(x, y-1, width, height);
-		newAdress.setFill(Color.ORANGE);
+	private boolean isCanBuildRoad(Rectangle newRoad) {
+		//check for collision with other roads
+		for (Node otherRoad : roads) {
+			if (newRoad.getBoundsInParent().intersects(otherRoad.getBoundsInParent())) {
+				return false;
+			}
+		}
+		return true;
+	}
 
-		//add to adresses ArrayList and return new adress
-		adresses.add(newAdress);
-		return newAdress;
+	private void placeAdressesOnNewRoad(Rectangle newRoad) {
+		int offset = 25;
+		int distance = 50;
+		int roadX = (int)newRoad.getX();
+		int roadY = (int)newRoad.getY();
+		int width = (int)newRoad.getWidth();
+		for (int i = roadX+offset; i < roadX+width; i+=distance) {placeAdress(i, roadY);};
+	}
+
+	private void placeAdress(int x, int y){
+			System.out.println("new adress at " + x + ", " + y);
+			Rectangle newAdress = new Rectangle(x, y-1, 2, 2);
+			newAdress.setFill(Color.ORANGE);
+			adresses.add(newAdress);
+			gameRoot.getChildren().add(newAdress);
+
+			placeEstate(newAdress);
+	};
+
+	private void placeEstate(Rectangle newAdress) {
+		int x = (int)newAdress.getX()-20;
+		int y = (int)newAdress.getY()-60;
+		Rectangle newEstate = new Rectangle(x, y, 40, 60);
+		newEstate.setFill(Color.DARKGREEN);
+		estates.add(newEstate);
+		gameRoot.getChildren().add(newEstate);
+		placeBuilding(newEstate);
+	}
+
+	private void placeBuilding(Rectangle newEstate) {
+		int estateX = (int)newEstate.getX();
+		int estateY = (int)newEstate.getY();
+		int estateWidth = (int)newEstate.getWidth();
+		int estateHeight = (int)newEstate.getHeight();
+
+		int width = (int)randomIntInRange(20, estateWidth-20);
+		int height = (int)randomIntInRange(20, estateHeight-20);
+		int x = estateX + randomIntInRange(0, estateWidth-width);
+		int y = estateY + randomIntInRange(0, estateHeight-height);
+
+		Rectangle newBuilding = new Rectangle(x, y, width, height);
+		newBuilding.setFill(Color.GRAY);
+		buildings.add(newBuilding);
+		gameRoot.getChildren().add(newBuilding);
 	}
 
 	private boolean isPressed(KeyCode key) {
@@ -154,32 +143,9 @@ public class Main extends Application {
 		return circle;
 	}
 
-	private Node createRectangle(int x, int y, int w, int h, Color color, int rot) {
-		Rectangle rectangle = new Rectangle(w, h);
-		rectangle.setTranslateX(x);
-		rectangle.setTranslateY(y);
-		rectangle.setFill(color);
-		rectangle.getProperties().put("exists", true);
-		rectangle.getTransforms().add(new Rotate(rot));
-		gameRoot.getChildren().add(rectangle);
-		return rectangle;
-	}
-
-	private Node createLine(int startX, int startY, int endX, int endY) {
-		Line line = new Line(startX, startY, endX, endY);
-		line.setStroke(Color.WHITE);
-		line.setStrokeWidth(9);
-		line.setStrokeType(StrokeType.OUTSIDE);
-		line.setStrokeLineCap(StrokeLineCap.ROUND);
-		line.getProperties().put("exists", true);
-		gameRoot.getChildren().add(line);
-		return line;
-	}
-
 	private int randomIntInRange(int min, int max) {
-		int n = max - min + 1;
-		int i = random.nextInt() % n;
-		return min + i;
+		int randomNum = ThreadLocalRandom.current().nextInt(min, max + 1);
+		return randomNum;
 	}
 
 	@Override
