@@ -30,7 +30,9 @@ public class Main extends Application {
 	private Node player;
 	private boolean running = true;
 
-	//methods
+//methods
+
+
 	private void update() {
 		if (isPressed(KeyCode.W)) {movePlayerY(-2);};
 		if (isPressed(KeyCode.S)) {movePlayerY(2);};
@@ -38,7 +40,15 @@ public class Main extends Application {
 		if (isPressed(KeyCode.D)) {movePlayerX(2);};
 		
 		if (isPressed(KeyCode.L)) {placeRoad();};
+		if (isPressed(KeyCode.X)) {testStuff();};
+
 	}
+
+	public void testStuff() {
+		Person lol = new Person(10.4, 11.5);
+		System.out.println(lol.origin.getX());
+	}
+
 
 	private void movePlayerX(int delta) {
 		player.setTranslateX(player.getTranslateX() + delta);
